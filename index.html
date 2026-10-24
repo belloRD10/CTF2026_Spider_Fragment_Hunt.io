@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cybersurferCTF — Spider Fragment Hunt</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game">
+  <div class="map"></div>
+  <div class="vignette"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-mark">◆</div>
+      <div>
+        <h1>CYBERSURFER <span>CTF</span></h1>
+        <p>A spider follows every cursor. Guide it into the hidden villages.</p>
+      </div>
+    </div>
+    <div class="status">
+      <span id="statusDot"></span>
+      <span id="statusText">SPIDER DEPLOYED</span>
+    </div>
+  </header>
+
+  <aside class="panel objective">
+    <h2>🗺 OBJECTIVE</h2>
+    <p>Your spider crawls toward your cursor. Move the mouse to lead it across the map.</p>
+    <p>Each village hides a <b>scan field</b>. Hold the spider inside one until it finishes scanning — that is the only way a flag fragment appears.</p>
+    <p>Only <b>4 of the 9</b> villages actually hold a fragment. The rest are decoys.</p>
+    <div class="hint">⚠ Patrol drones are roaming the map. Contact shreds your web and respawns you.</div>
+  </aside>
+
+  <aside class="panel tracker">
+    <div class="tracker-head">
+      <h2>FLAG FRAGMENTS</h2>
+      <span id="count">0 / 4 FOUND</span>
+    </div>
+    <div class="slots">
+      <div class="slot" data-slot="0"><span>?</span><small>PART 1</small></div>
+      <div class="slot" data-slot="1"><span>?</span><small>PART 2</small></div>
+      <div class="slot" data-slot="2"><span>?</span><small>PART 3</small></div>
+      <div class="slot" data-slot="3"><span>?</span><small>PART 4</small></div>
+    </div>
+    <div class="progress"><i id="progressBar"></i></div>
+    <div class="web-meter"><i id="webBar"></i></div>
+    <div class="readout"><span>WEB</span><span id="webText">100%</span></div>
+    <div class="readout"><span>SCANNED</span><span id="zoneText">0 / 9</span></div>
+    <div class="readout"><span>TRAVEL</span><span id="movesText">0 m</span></div>
+  </aside>
+
+  <div class="hop-help">
+    <b>SPIDER MODE</b>
+    <span>Move your cursor — the spider crawls after it. No clicking.</span>
+  </div>
+
+  <div id="silkLayer"></div>
+  <div id="threatLayer"></div>
+  <div id="spiderLayer">
+    <div id="spider">
+      <div class="spider-glyph" id="spiderGlyph">
+        <div class="spider-bank">
+          <div class="spider-inner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="cursorMarker" aria-hidden="true"></div>
+  <div id="fxLayer"></div>
+  <div id="fragmentLayer"></div>
+  <div id="damageFlash"></div>
+  <div id="toast"></div>
+
+  <div id="complete" class="modal hidden">
+    <div class="modal-card">
+      <div class="big-icon">◆</div>
+      <h2>ALL FRAGMENTS RECOVERED!</h2>
+      <p>You led the spider through the hidden villages and reconstructed the hidden flag.</p>
+      <div class="flag-box" id="finalFlag">cybersurferCTF{...}</div>
+      <p class="small">Submit the reconstructed flag to the CTF scoreboard.</p>
+      <button id="restart">HUNT AGAIN</button>
+    </div>
+  </div>
+
+  <footer>CYBERSURFER CTF • RANDOMIZED FRAGMENT HUNT • NO MARKERS • NO SPOILERS</footer>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

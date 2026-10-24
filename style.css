@@ -1,0 +1,257 @@
+*{box-sizing:border-box}
+:root{--red:#ff2947;--cyan:#48e6ff;--gold:#ffc85b;--panel:rgba(7,14,28,.88)}
+@property --p{syntax:"<number>";inherits:false;initial-value:0}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07111f;font-family:Inter,Segoe UI,Arial,sans-serif;color:#fff}
+body{cursor:none}
+#game{position:relative;width:100vw;height:100vh;overflow:hidden;background:#07111f}
+.map{position:absolute;inset:0;background-image:url("cursor-ctf-map.png");background-size:cover;background-position:center center;filter:saturate(1.08) contrast(1.04)}
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent 38%,rgba(1,6,16,.18) 75%,rgba(0,0,0,.66))}
+.topbar{position:absolute;z-index:20;top:18px;left:24px;right:24px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.brand{display:flex;gap:12px;align-items:center;text-shadow:0 3px 12px #000}
+.logo-mark{width:43px;height:43px;display:grid;place-items:center;color:#ff2947;font-size:31px;transform:rotate(45deg);filter:drop-shadow(0 0 8px #e31c3d)}
+h1{font-size:31px;letter-spacing:3px;margin:0;font-weight:900}
+h1 span{color:var(--red)}
+.brand p{margin:2px 0 0;font-size:11px;letter-spacing:1.2px;font-weight:700}
+.status{background:rgba(4,10,20,.76);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:9px 15px;font-size:10px;letter-spacing:1.3px;font-weight:800;backdrop-filter:blur(8px)}
+#statusDot{display:inline-block;width:8px;height:8px;background:#56f28a;border-radius:50%;box-shadow:0 0 12px #56f28a;margin-right:7px}
+.panel{z-index:20;position:absolute;background:var(--panel);border:1px solid rgba(255,255,255,.18);box-shadow:0 14px 40px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(10px);border-radius:14px}
+.objective{top:105px;left:24px;width:290px;padding:17px 18px}
+.panel h2{margin:0 0 10px;font-size:15px;letter-spacing:1px}
+.objective p{font-size:12px;line-height:1.55;color:#d8e1ef;margin:7px 0}
+.hint{margin-top:12px;padding:9px;border-left:3px solid var(--gold);background:rgba(255,200,91,.08);font-size:11px;color:#ffd98a}
+.tracker{top:22px;right:24px;width:314px;padding:14px 15px 13px}
+.tracker-head{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.tracker h2{font-size:12.5px;letter-spacing:2px;margin:0;padding-left:10px;position:relative;white-space:nowrap}
+.tracker h2::before{content:"";position:absolute;left:0;top:50%;width:3px;height:13px;transform:translateY(-50%);border-radius:2px;background:linear-gradient(180deg,#ff2947,#ffc85b);box-shadow:0 0 8px rgba(255,41,71,.7)}
+#count{font-size:8px;letter-spacing:1.1px;font-weight:800;color:#9fb0c6;background:rgba(72,230,255,.08);border:1px solid rgba(72,230,255,.26);border-radius:99px;padding:3px 8px;white-space:nowrap}
+/* Tiles stay inside the panel: the columns are allowed to shrink (minmax(0))
+   and the recovered piece wraps instead of stretching its box wide. */
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:7px;margin-top:11px}
+.slot{position:relative;min-width:0;min-height:54px;padding:8px 7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:linear-gradient(180deg,#060d19,#03070f);border:1px solid #2f3a4d;border-radius:10px;overflow:hidden;transition:border-color .35s,box-shadow .35s,background .35s}
+.slot::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 118%,var(--c1,#ff2947),transparent 72%);opacity:0;transition:opacity .45s}
+.slot span{position:relative;z-index:1;font-size:22px;font-weight:900;line-height:1;color:#5b6678}
+.slot small{position:relative;z-index:1;font-size:7.5px;font-weight:800;letter-spacing:1px;color:#7e8ba1;white-space:nowrap}
+.slot.found{border-color:var(--c1,#ff2947);box-shadow:0 0 20px -6px var(--c1,#ff2947),inset 0 1px rgba(255,255,255,.06)}
+.slot.found::before{opacity:.14}
+.slot.found span{font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:9.5px;font-weight:700;line-height:1.28;letter-spacing:0;color:#ffe9ee;text-align:center;word-break:break-all;overflow-wrap:anywhere;max-width:100%;text-shadow:0 1px 4px #000}
+.slot.found small{color:#ffb9c5}
+.progress{height:6px;background:#111b2c;border-radius:99px;margin-top:13px;overflow:hidden}
+.progress i{display:block;width:0;height:100%;background:linear-gradient(90deg,#ff2947,#ffc85b);transition:.5s}
+.web-meter{height:5px;background:#111b2c;border-radius:99px;margin-top:11px;overflow:hidden}
+.web-meter i{display:block;width:100%;height:100%;background:linear-gradient(90deg,#48e6ff,#8affd6);transition:.35s}
+.readout{display:flex;justify-content:space-between;font-size:8.5px;letter-spacing:1.4px;font-weight:800;color:#7e8ba1;margin-top:6px}
+.readout span:last-child{color:#c8d3e4}
+.hop-help{position:absolute;z-index:20;left:50%;bottom:28px;transform:translateX(-50%);padding:8px 14px;border:1px solid rgba(255,255,255,.16);background:rgba(4,10,20,.75);border-radius:18px;backdrop-filter:blur(8px);font-size:10px;white-space:nowrap;text-shadow:0 2px 4px #000}
+.hop-help b{color:#ff526a;margin-right:7px;letter-spacing:1px}
+
+/* ── cursor reticle ─────────────────────────────────────────── */
+#cursorMarker{position:absolute;z-index:14;width:26px;height:26px;margin:-13px 0 0 -13px;border:1px solid rgba(72,230,255,.85);border-radius:50%;pointer-events:none;opacity:.9;box-shadow:0 0 10px rgba(72,230,255,.5),inset 0 0 6px rgba(72,230,255,.35)}
+#cursorMarker::before{content:"";position:absolute;left:50%;top:-7px;width:1px;height:6px;margin-left:-.5px;background:rgba(72,230,255,.85);box-shadow:0 40px 0 rgba(72,230,255,.85)}
+#cursorMarker::after{content:"";position:absolute;top:50%;left:-7px;width:6px;height:1px;margin-top:-.5px;background:rgba(72,230,255,.85);box-shadow:40px 0 0 rgba(72,230,255,.85)}
+
+/* ── silk trail ─────────────────────────────────────────────── */
+#silkLayer{position:absolute;inset:0;z-index:11;pointer-events:none}
+.mote{position:absolute;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:radial-gradient(circle,rgba(72,230,255,.8),transparent 70%);opacity:0}
+.mote.pop{animation:moteFade .95s ease-out}
+@keyframes moteFade{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(.15)}}
+
+/* ── patrol drones ────────────────────────────────────────────────
+   Layers, back to front: aura, detection cone, two counter-spinning
+   scanner rings, armoured chassis, reactor core, targeting reticle,
+   wind-up strobe, state label. Everything keys off `currentColor`
+   so one class swap re-colours the whole drone cyan -> red. */
+#threatLayer{position:absolute;inset:0;z-index:12;pointer-events:none}
+#threatLayer.danger{animation:threatWarn .9s ease-in-out infinite}
+@keyframes threatWarn{50%{box-shadow:inset 0 0 110px rgba(255,41,71,.36)}}
+.drone{position:absolute;left:0;top:0;width:0;height:0;color:#48e6ff;--facing:0deg;transition:color .22s}
+.d-glow{position:absolute;left:-48px;top:-48px;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle,currentColor,transparent 62%);opacity:.13;transition:opacity .22s}
+.d-cone{position:absolute;left:-72px;top:-72px;width:144px;height:144px;transform:rotate(var(--facing));background:conic-gradient(from -52deg,currentColor 0deg,transparent 104deg);opacity:.19;-webkit-mask:radial-gradient(circle,#000 0 76px,transparent 77px);mask:radial-gradient(circle,#000 0 76px,transparent 77px)}
+.d-ring{position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;border:1px dashed currentColor;opacity:.42;animation:droneSpin 6s linear infinite}
+.d-ring2{position:absolute;left:-20px;top:-20px;width:40px;height:40px;border-radius:50%;border:1px dotted currentColor;opacity:.5;animation:droneSpin 3.4s linear infinite reverse}
+.d-chassis{position:absolute;left:-18px;top:-18px;width:36px;height:36px;background:linear-gradient(145deg,#22304e,#070c15);clip-path:polygon(50% 0,86% 22%,100% 60%,64% 100%,18% 90%,0 50%);filter:drop-shadow(0 0 7px currentColor)}
+.d-core{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor,0 0 26px currentColor;animation:dCore .9s ease-in-out infinite}
+@keyframes dCore{50%{transform:scale(.6);opacity:.65}}
+.d-reticle{position:absolute;left:-48px;top:-48px;width:96px;height:96px;opacity:0;transition:opacity .2s;background:linear-gradient(currentColor,currentColor) 50% 0/1px 15px no-repeat,linear-gradient(currentColor,currentColor) 50% 100%/1px 15px no-repeat,linear-gradient(currentColor,currentColor) 0 50%/15px 1px no-repeat,linear-gradient(currentColor,currentColor) 100% 50%/15px 1px no-repeat}
+.d-strobe{position:absolute;left:-18px;top:-18px;width:36px;height:36px;border-radius:50%;opacity:0;background:radial-gradient(circle,currentColor,transparent 64%)}
+.d-label{position:absolute;left:-64px;top:38px;width:128px;text-align:center;font-style:normal;font-size:7.5px;font-weight:900;letter-spacing:1.7px;color:currentColor;text-shadow:0 0 6px rgba(0,0,0,.95);opacity:0;transition:opacity .2s;white-space:nowrap}
+.drone.alert{color:#ff2947}
+.drone.alert .d-glow{opacity:.3;animation:dGlow .55s ease-in-out infinite}
+.drone.alert .d-label{opacity:.9}
+@keyframes dGlow{50%{opacity:.5}}
+.drone.wind .d-strobe{opacity:1;animation:strobe .17s steps(2) infinite}
+.drone.hunt .d-reticle{opacity:.85;animation:reticlePulse .5s ease-in-out infinite}
+.drone.hunt .d-ring{animation-duration:1.5s}
+.drone.hunt .d-ring2{animation-duration:.9s}
+@keyframes strobe{50%{opacity:.12}}
+@keyframes reticlePulse{50%{opacity:.35;transform:scale(1.08)}}
+@keyframes droneSpin{to{transform:rotate(360deg)}}
+
+/* ── the spider ────────────────────────────────────────────────
+   Everything hangs off a zero-size anchor at the cursor: a contact
+   shadow, two body plates (markings, gloss, spinnerets), a four-eye
+   cluster that blinks, fangs, and eight legs built as a real chain —
+   hip > femur > tibia > tarsus, each segment pivoting on the end of
+   the last one. The gait keys off --gait (stride seconds), --amp
+   (stride size), --load (0..1 speed) and per-leg --p / --dir, all
+   written by updateBug()/buildLegs(). */
+#spiderLayer{position:absolute;inset:0;z-index:15;pointer-events:none}
+#spider{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
+.spider-glyph{position:absolute;left:0;top:0;width:0;height:0;transform:rotate(var(--h,0deg))}
+.spider-bank{position:absolute;left:0;top:0;width:0;height:0;transform:skewX(var(--bank,0deg))}
+.spider-inner{position:absolute;left:0;top:0;width:0;height:0}
+
+/* contact shadow — grounds the body, and tightens as the spider speeds up */
+.spider-shadow{position:absolute;left:-27px;top:0;width:54px;height:22px;border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.6),rgba(0,0,0,.2) 58%,transparent 74%);filter:blur(2.5px);opacity:calc(.5 + var(--load,0)*.34);transform:scale(calc(1 + var(--load,0)*.2))}
+
+.spider-aura{position:absolute;left:-46px;top:-46px;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle,rgba(255,41,71,.24),transparent 64%);animation:auraPulse 2.3s ease-in-out infinite}
+@keyframes auraPulse{50%{transform:scale(1.16);opacity:.6}}
+
+/* legs: hip > femur > tibia > tarsus, every joint bending on the last segment */
+.leg{position:absolute;left:0;top:var(--hy);width:0;height:0;transform:rotate(var(--a))}
+.leg b{position:absolute;left:0;top:0;height:2.4px;margin-top:-1.2px;border-radius:2px;transform-origin:0 50%}
+.leg .femur{width:17px;transform:rotate(var(--f));background:linear-gradient(90deg,#2b0a13,#ff3b57 62%,#ff7a90);box-shadow:0 0 6px rgba(255,41,71,.45)}
+.leg .tibia{left:17px;width:18px;transform:rotate(var(--t));background:linear-gradient(90deg,#ff3b57,#ff8b9e 62%,#ffc6d1)}
+.leg .tibia::after{content:"";position:absolute;left:12%;top:-2.6px;width:78%;height:2.4px;background:repeating-linear-gradient(90deg,rgba(255,175,195,.6) 0 1px,transparent 1px 4px);transform:skewX(-26deg);opacity:.5}
+.leg .tarsus{left:18px;width:9px;height:2px;margin-top:-1px;border-radius:0 3px 3px 0;transform:rotate(var(--u));background:linear-gradient(90deg,#ffc6d1,rgba(255,198,209,.22))}
+.leg .tarsus::after{content:"";position:absolute;right:-2px;top:50%;width:2.8px;height:2.8px;margin-top:-1.4px;border-radius:50%;background:#ffe8ee;box-shadow:0 0 5px rgba(255,190,205,.9)}
+
+.spider-pedicel{position:absolute;left:0;top:0;width:10px;height:7px;transform:translate(-50%,3px);border-radius:4px;background:linear-gradient(180deg,#8a1529,#26060c);box-shadow:0 0 7px rgba(255,41,71,.4)}
+
+.spider-abdomen{position:absolute;left:0;top:0;width:26px;height:29px;transform:translate(-50%,10px);border-radius:52% 52% 44% 44%/58% 58% 42% 42%;background:radial-gradient(circle at 50% 26%,#a8182f,#440d18 58%,#150409 94%);box-shadow:0 0 16px rgba(255,41,71,.5),inset 0 0 12px rgba(0,0,0,.78)}
+.spider-abdomen .abd-mark{position:absolute;left:50%;top:24%;width:11px;height:58%;transform:translateX(-50%);background:linear-gradient(180deg,rgba(255,150,170,.5),rgba(255,70,105,.18));clip-path:polygon(50% 0,100% 25%,50% 50%,100% 75%,50% 100%,0 75%,50% 50%,0 25%);opacity:.55}
+.spider-abdomen .abd-gloss{position:absolute;left:22%;top:11%;width:42%;height:24%;border-radius:50%;background:linear-gradient(180deg,rgba(255,214,224,.4),transparent 82%);filter:blur(1.1px)}
+.spider-spin{position:absolute;left:50%;bottom:-3px;width:13px;height:7px;transform:translateX(-50%)}
+.spider-spin b{position:absolute;bottom:0;width:4px;height:6px;border-radius:45% 45% 55% 55%;background:linear-gradient(180deg,#6d1322,#1d0509);box-shadow:0 0 6px rgba(255,41,71,.4)}
+.spider-spin b:first-child{left:0}
+.spider-spin b:last-child{right:0}
+
+.spider-ceph{position:absolute;left:0;top:0;width:17px;height:16px;transform:translate(-50%,-11px);border-radius:50% 50% 46% 46%/56% 56% 44% 44%;background:radial-gradient(circle at 50% 28%,#b81c38,#520f1d 60%,#170408 96%);box-shadow:0 0 13px rgba(255,41,71,.5),inset 0 -3px 7px rgba(0,0,0,.62)}
+.spider-ceph .ceph-mark{position:absolute;left:50%;top:18%;width:7px;height:38%;transform:translateX(-50%);background:linear-gradient(180deg,rgba(255,190,205,.55),transparent);clip-path:polygon(50% 0,100% 100%,0 100%);opacity:.7}
+
+.spider-fangs{position:absolute;left:0;top:0;width:9px;height:6px;transform:translate(-50%,-24px)}
+.spider-fangs b{position:absolute;bottom:0;width:2.8px;height:6px;background:linear-gradient(180deg,#e6edf6,#4a5566);clip-path:polygon(50% 0,100% 100%,0 100%);filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
+.spider-fangs b:first-child{left:.6px}
+.spider-fangs b:last-child{right:.6px}
+
+.spider-eyes{position:absolute;left:0;top:0;width:14px;height:10px;transform:translate(-50%,-14px);animation:eyeBlink 6.4s steps(1) infinite}
+.spider-eyes b{position:absolute;border-radius:50%;background:radial-gradient(circle at 34% 30%,#f4ffff,#7ceaff 56%,#2a8fb5);box-shadow:0 0 7px #48e6ff,0 0 13px rgba(72,230,255,.5)}
+.spider-eyes b:nth-child(1){left:0;top:0;width:3.6px;height:3.6px}
+.spider-eyes b:nth-child(2){left:2.4px;top:4.2px;width:2.4px;height:2.4px;opacity:.85}
+.spider-eyes b:nth-child(3){right:2.4px;top:4.2px;width:2.4px;height:2.4px;opacity:.85}
+.spider-eyes b:nth-child(4){right:0;top:0;width:3.6px;height:3.6px}
+@keyframes eyeBlink{0%,95%{transform:translate(-50%,-14px) scaleY(1)}96%,97%{transform:translate(-50%,-14px) scaleY(.1)}98%,100%{transform:translate(-50%,-14px) scaleY(1)}}
+
+/* ── gait ────────────────────────────────────────────────────────
+   Alternating tripod: the diagonal legs step together (per-leg --p),
+   with a small front-to-back ripple on top. Each leg does a long
+   power stroke with the foot planted, then a quick lifted recovery:
+   the hip swings the leg, the femur folds it inward to lift the
+   foot, the tibia telescopes it back out to plant again and the
+   tarsus counter-rotates so the tip keeps pointing out. --dir flips
+   the whole step for the mirrored side. */
+.moving .spider-inner{animation:bodySway var(--gait,.34s) linear infinite}
+.moving .leg{animation:hipSwing var(--gait,.34s) linear infinite;animation-delay:calc(var(--p) * var(--gait,.34s) * -1)}
+.moving .femur{animation:femurFold var(--gait,.34s) linear infinite;animation-delay:calc(var(--p) * var(--gait,.34s) * -1)}
+.moving .tibia{animation:tibiaStep var(--gait,.34s) linear infinite;animation-delay:calc(var(--p) * var(--gait,.34s) * -1)}
+.moving .tarsus{animation:tarsusStep var(--gait,.34s) linear infinite;animation-delay:calc(var(--p) * var(--gait,.34s) * -1)}
+.moving .spider-abdomen{animation:abdomenSway var(--gait,.34s) linear infinite}
+.moving .spider-spin b{animation:spinTwitch var(--gait,.34s) ease-in-out infinite}
+
+@keyframes bodySway{
+  0%,34%,50%,84%,100%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
+  16%{transform:translate3d(-.9px,0,0) rotate(-1.5deg) scale(1.012)}
+  67%{transform:translate3d(.9px,0,0) rotate(1.5deg) scale(1.012)}
+}
+@keyframes hipSwing{
+  0%{transform:rotate(calc(var(--a) - var(--dir,1) * var(--amp,1) * 17deg));animation-timing-function:linear}
+  50%{transform:rotate(calc(var(--a) + var(--dir,1) * var(--amp,1) * 17deg));animation-timing-function:cubic-bezier(.5,0,.22,1)}
+  100%{transform:rotate(calc(var(--a) - var(--dir,1) * var(--amp,1) * 17deg))}
+}
+@keyframes femurFold{
+  0%{transform:rotate(calc(var(--f) + var(--dir,1) * 4deg));animation-timing-function:linear}
+  50%{transform:rotate(calc(var(--f) - var(--dir,1) * 4deg));animation-timing-function:cubic-bezier(.15,.8,.25,1)}
+  63%{transform:rotate(calc(var(--f) + var(--dir,1) * 16deg))}
+  80%{transform:rotate(calc(var(--f) + var(--dir,1) * 16deg));animation-timing-function:cubic-bezier(.55,0,.35,1)}
+  98%,100%{transform:rotate(calc(var(--f) + var(--dir,1) * 4deg))}
+}
+@keyframes tibiaStep{
+  0%{transform:rotate(calc(var(--t) - var(--dir,1) * 3deg));animation-timing-function:linear}
+  50%{transform:rotate(calc(var(--t) + var(--dir,1) * 5deg));animation-timing-function:cubic-bezier(.15,.8,.25,1)}
+  63%{transform:rotate(calc(var(--t) - var(--dir,1) * 22deg))}
+  80%{transform:rotate(calc(var(--t) - var(--dir,1) * 22deg));animation-timing-function:cubic-bezier(.55,0,.35,1)}
+  98%,100%{transform:rotate(calc(var(--t) - var(--dir,1) * 3deg))}
+}
+@keyframes tarsusStep{
+  0%,50%{transform:rotate(var(--u))}
+  63%,80%{transform:rotate(calc(var(--u) + var(--dir,1) * 17deg))}
+  98%,100%{transform:rotate(var(--u))}
+}
+@keyframes abdomenSway{0%{transform:translate(-50%,10px) rotate(-3.4deg)}50%{transform:translate(-50%,10px) rotate(3.4deg)}100%{transform:translate(-50%,10px) rotate(-3.4deg)}}
+@keyframes spinTwitch{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7)}}
+
+/* idle: legs splay out, the body breathes, and a random leg twitches now and then */
+.idle .spider-inner{animation:idleBreath 3.6s ease-in-out infinite}
+.idle .leg{transform:rotate(calc(var(--a) + var(--splay,0deg)));animation:none}
+.idle .femur{transform:rotate(calc(var(--f) + var(--dir,1) * 2deg))}
+.idle .tibia{transform:rotate(var(--t))}
+.idle .tarsus{transform:rotate(var(--u))}
+.idle .spider-abdomen{animation:abdBreath 2.9s ease-in-out infinite}
+@keyframes idleBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.012)}}
+@keyframes abdBreath{0%,100%{transform:translate(-50%,10px) scale(1)}50%{transform:translate(-50%,9.4px) scale(1.03)}}
+
+/* twitch — declared after the idle rules so it wins while standing still */
+.leg.twitch{animation:legTwitch .28s ease-out}
+.leg.twitch .femur{animation:legTwitchFemur .28s ease-out}
+.leg.twitch .tibia{animation:legTwitchTibia .28s ease-out}
+@keyframes legTwitch{0%{transform:rotate(calc(var(--a) + var(--splay,0deg)))}42%{transform:rotate(calc(var(--a) + var(--splay,0deg) * 2.5))}100%{transform:rotate(calc(var(--a) + var(--splay,0deg)))}}
+@keyframes legTwitchFemur{0%{transform:rotate(calc(var(--f) + var(--dir,1) * 2deg))}42%{transform:rotate(calc(var(--f) - var(--dir,1) * 11deg))}100%{transform:rotate(calc(var(--f) + var(--dir,1) * 2deg))}}
+@keyframes legTwitchTibia{0%{transform:rotate(var(--t))}42%{transform:rotate(calc(var(--t) + var(--dir,1) * 15deg))}100%{transform:rotate(var(--t))}}
+
+#spider.hurt .spider-abdomen,#spider.hurt .spider-ceph{animation:hurtFlash .28s steps(2) infinite}
+#spider.hurt .leg b{filter:brightness(1.5)}
+@keyframes hurtFlash{50%{filter:brightness(2.8) saturate(.3)}}
+#spider.weak .spider-aura{animation-duration:.5s;opacity:.45;background:radial-gradient(circle,rgba(255,41,71,.4),transparent 64%)}
+#spider.weak .leg .femur,#spider.weak .leg .tibia{filter:saturate(.5) brightness(.82)}
+
+/* ── scan fields and fx ─────────────────────────────────────── */
+#fxLayer{position:absolute;inset:0;z-index:17;pointer-events:none}
+.scan{position:absolute;width:0;height:0}
+.scan i{position:absolute;left:-44px;top:-44px;width:88px;height:88px;border-radius:50%;-webkit-mask:radial-gradient(circle,transparent 61%,#000 62%);mask:radial-gradient(circle,transparent 61%,#000 62%);background:conic-gradient(var(--cyan) calc(var(--p,0) * 1turn),rgba(72,230,255,.12) 0);filter:drop-shadow(0 0 8px rgba(72,230,255,.7))}
+.scan span{position:absolute;left:-80px;top:52px;width:160px;text-align:center;font-size:9px;letter-spacing:1.5px;font-weight:800;color:#c4f5ff;text-shadow:0 2px 5px #000}
+.burst{position:absolute;width:0;height:0}
+.burst::before,.burst::after{content:"";position:absolute;left:-6px;top:-6px;width:12px;height:12px;border:2px solid var(--gold);border-radius:50%;animation:burstOut .85s ease-out forwards}
+.burst::after{animation-delay:.1s;border-color:var(--red)}
+@keyframes burstOut{to{opacity:0;transform:scale(12)}}
+#damageFlash{position:absolute;inset:0;z-index:60;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 50%,transparent 32%,rgba(255,20,50,.55) 100%)}
+#damageFlash.fire{animation:damageFlash .5s ease-out}
+@keyframes damageFlash{0%{opacity:1}100%{opacity:0}}
+
+/* ── fragments ────────────────────────────────────────────────────
+   Every shard is randomised per game: clip-path silhouette, palette,
+   tilt, size, float pulse rate and entrance style all come from
+   inline custom properties written by buildShard(). */
+#fragmentLayer{position:absolute;inset:0;z-index:16;pointer-events:none}
+.fragment{position:absolute;width:var(--w,56px);padding:4px 3px;opacity:0;transition:transform .5s cubic-bezier(.2,1.6,.3,1),opacity .3s,filter .3s}
+.fragment::before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,var(--c1),transparent 62%);opacity:.2;filter:blur(5px)}
+.fragment.rv-spin{transform:translate(-50%,-50%) rotate(calc(var(--tilt,0deg) - 200deg)) scale(.1)}
+.fragment.rv-drop{transform:translate(-50%,-260%) rotate(calc(var(--tilt,0deg) + 55deg)) scale(.5)}
+.fragment.rv-blast{transform:translate(-50%,-50%) rotate(var(--tilt,0deg)) scale(1.9);filter:brightness(3.4)}
+.fragment.revealed{opacity:1;filter:none;transform:translate(-50%,-50%) rotate(var(--tilt,0deg)) scale(1)}
+.shard{position:relative;display:grid;place-items:center;width:100%;animation:shardFloat var(--pulse,1.2s) ease-in-out infinite}
+.shard::before{content:"";position:absolute;inset:0;clip-path:var(--shard,polygon(8% 17%,86% 2%,98% 76%,20% 98%));background:linear-gradient(150deg,var(--c1),var(--c2));filter:drop-shadow(0 0 7px var(--c1))}
+.shard::after{content:"";position:absolute;inset:0;clip-path:var(--shard,polygon(8% 17%,86% 2%,98% 76%,20% 98%));background:linear-gradient(200deg,rgba(255,255,255,.34),transparent 46%)}
+.shard span{position:relative;z-index:2;padding:0 3px;text-align:center;font-size:var(--fs,7px);font-weight:900;line-height:1.3;color:#fff;word-break:break-all;text-shadow:0 2px 4px #000,0 0 10px rgba(0,0,0,.9)}
+@keyframes shardFloat{0%,100%{transform:translateY(0) rotate(var(--tilt,0deg)) scale(1);filter:drop-shadow(0 0 4px var(--c1))}50%{transform:translateY(-3px) rotate(calc(var(--tilt,0deg) * -1.25)) scale(1.03);filter:drop-shadow(0 0 11px var(--c1))}}
+
+#toast{position:absolute;z-index:40;left:50%;top:82%;transform:translate(-50%,20px);opacity:0;padding:12px 18px;background:rgba(4,8,16,.94);border:1px solid rgba(255,255,255,.2);border-radius:10px;font-size:12px;font-weight:800;letter-spacing:.8px;transition:.3s;pointer-events:none;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{position:absolute;z-index:100;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.68);backdrop-filter:blur(7px)}
+.hidden{display:none}
+.modal-card{width:min(530px,90vw);padding:36px;text-align:center;border:1px solid #ff2947;border-radius:18px;background:linear-gradient(145deg,#111827,#070b12);box-shadow:0 0 70px rgba(255,41,71,.25)}
+.big-icon{font-size:55px;color:#ff2947;text-shadow:0 0 20px #ff2947}
+.modal-card h2{font-size:22px;letter-spacing:2px;color:#ff4059}
+.flag-box{margin:18px 0;padding:15px;background:#03060b;border:1px dashed #ff4059;color:#ffd5db;font-family:Consolas,monospace;font-size:14px;line-height:1.5;word-break:break-all}
+.modal-card .small{font-size:11px;color:#8793a7}
+#restart{margin-top:10px;border:0;border-radius:8px;padding:11px 20px;background:#ff2947;color:white;font-weight:900;cursor:pointer}
+footer{position:absolute;z-index:20;right:24px;bottom:28px;font-size:9px;color:#c2cad7;letter-spacing:1.2px;text-shadow:0 2px 4px #000}
+@media(max-width:800px){.objective{width:235px}.tracker{width:240px}.brand h1{font-size:23px}.brand p{display:none}.objective{top:85px}.hop-help{bottom:65px;font-size:9px}}
